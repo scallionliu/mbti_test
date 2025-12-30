@@ -1,0 +1,21 @@
+{
+  "name": "mbti-personality-test",
+  "version": "1.0.0",
+  "description": "A premium MBTI personality test website with 20 randomized questions.",
+  "main": "main.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/user/mbti-test"
+  },
+  "keywords": [
+    "mbti",
+    "personality",
+    "quiz",
+    "edgeone"
+  ],
+  "scripts": {
+    "build": "mkdir -p dist && cp index.html style.css main.js dist/"
+  },
+  "author": "",
+  "license": "MIT"
+}

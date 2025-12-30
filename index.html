@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MBTI 人格测试 | 探索真实的你</title>
+    <meta name="description" content="一个精美、准确的 20 题 MBTI 性格测试，帮助你了解自己的性格类型。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <div id="background-blobs">
+            <div class="blob blob-1"></div>
+            <div class="blob blob-2"></div>
+            <div class="blob blob-3"></div>
+        </div>
+
+        <main id="main-container">
+            <!-- Content will be dynamically injected here -->
+            <div id="view-landing" class="view active">
+                <header class="hero">
+                    <div class="badge">MBTI Personality Test</div>
+                    <h1>探索真实的你</h1>
+                    <p>通过这 20 个精心挑选的问题，揭开你性格面具下的真实底色。基于荣格心理学理论，开启一场自我发现之旅。</p>
+                    <button id="start-btn" class="btn-primary">开始测试</button>
+                </header>
+            </div>
+
+            <div id="view-quiz" class="view">
+                <div class="progress-wrapper">
+                    <div class="progress-info">
+                        <span id="question-number">第 1 / 20 题</span>
+                        <span id="progress-percentage">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div id="progress-fill"></div>
+                    </div>
+                </div>
+                <div id="question-container">
+                    <!-- Question and options injected here -->
+                </div>
+            </div>
+
+            <div id="view-loading" class="view">
+                <div class="loader-content">
+                    <div class="spinner"></div>
+                    <h2>正在分析你的性格特征...</h2>
+                    <p>心理学算法正在计算你的维度得分</p>
+                </div>
+            </div>
+
+            <div id="view-result" class="view">
+                <!-- Result details injected here -->
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2024 MBTI Explorer. Designed for Discovery.</p>
+        </footer>
+    </div>
+    <script src="main.js"></script>
+</body>
+</html>
