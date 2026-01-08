@@ -188,8 +188,8 @@
 
     <script>
         const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-            ? 'http://localhost:3000/api'
-            : 'http://42.192.65.17:3000/api';
+            ? 'https://localhost:3000/api'
+            : 'https://42.192.65.17:3000/api';
         let SECRET_KEY = localStorage.getItem('admin_secret');
 
         if (SECRET_KEY) {
