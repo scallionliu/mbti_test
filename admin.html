@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MBTI Admin - Invitation Codes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --text: #f8fafc;
+            --primary: #6366f1;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 1rem;
+        }
+
+        h1 {
+            margin: 0;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .action-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        input {
+            padding: 0.75rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 0.5rem;
+            flex-grow: 1;
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        th {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .status-used {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        .code-display {
+            font-family: monospace;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+        }
+
+        #login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="login-overlay">
+        <div class="card" style="width: 300px; text-align: center;">
+            <h2>Admin Login</h2>
+            <input type="password" id="admin-secret-input" placeholder="Enter Secret Key"
+                style="width: 100%; margin-bottom: 1rem; box-sizing: border-box;">
+            <button onclick="login()">Login</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>Invitation Codes</h1>
+            <button onclick="logout()"
+                style="background: transparent; border: 1px solid rgba(255,255,255,0.2);">Logout</button>
+        </header>
+
+        <div class="card">
+            <h3>Generate New Code</h3>
+            <div class="action-row">
+                <button onclick="generateCode()">+ Generate Random Code</button>
+            </div>
+            <div id="new-code-result"
+                style="color: var(--success); margin-top: 1rem; font-weight: bold; display: none;">
+                New Code: <span id="generated-code-value" class="code-display"></span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Code History</h3>
+            <button onclick="fetchCodes()" style="font-size: 0.8rem; padding: 0.5rem 1rem; margin-bottom: 1rem;">Refresh
+                List</button>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Code</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Used At</th>
+                    </tr>
+                </thead>
+                <tbody id="codes-table-body">
+                    <!-- Codes injected here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        let SECRET_KEY = localStorage.getItem('admin_secret');
+
+        if (SECRET_KEY) {
+            document.getElementById('login-overlay').style.display = 'none';
+            fetchCodes();
+        }
+
+        function login() {
+            const input = document.getElementById('admin-secret-input').value;
+            if (input) {
+                SECRET_KEY = input;
+                localStorage.setItem('admin_secret', input);
+                document.getElementById('login-overlay').style.display = 'none';
+                fetchCodes();
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('admin_secret');
+            location.reload();
+        }
+
+        async function fetchCodes() {
+            try {
+                const res = await fetch(`${API_URL}/codes`, {
+                    headers: { 'x-admin-secret': SECRET_KEY }
+                });
+                if (res.status === 403) {
+                    alert('Invalid Secret Key');
+                    logout();
+                    return;
+                }
+                const codes = await res.json();
+                renderTable(codes);
+            } catch (err) {
+                console.error(err);
+                alert('Failed to fetch codes. Is server running?');
+            }
+        }
+
+        async function generateCode() {
+            try {
+                const res = await fetch(`${API_URL}/generate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ secret: SECRET_KEY })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('new-code-result').style.display = 'block';
+                    document.getElementById('generated-code-value').innerText = data.code;
+                    fetchCodes();
+                } else {
+                    alert('Error: ' + (data.error || 'Unknown'));
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Failed to generate code.');
+            }
+        }
+
+        function renderTable(codes) {
+            const tbody = document.getElementById('codes-table-body');
+            tbody.innerHTML = codes.map(c => `
+                <tr>
+                    <td>${c.id}</td>
+                    <td><span class="code-display">${c.code}</span></td>
+                    <td><span class="status-badge ${c.is_used ? 'status-used' : 'status-active'}">${c.is_used ? 'Used' : 'Active'}</span></td>
+                    <td>${new Date(c.generated_at).toLocaleString()}</td>
+                    <td>${c.used_at ? new Date(c.used_at).toLocaleString() : '-'}</td>
+                </tr>
+            `).join('');
+        }
+    </script>
+</body>
+
+</html>

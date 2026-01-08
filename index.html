@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,9 +8,12 @@
     <meta name="description" content="一个精美、准确的 20 题 MBTI 性格测试，帮助你了解自己的性格类型。">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div id="app">
         <div id="background-blobs">
@@ -57,10 +61,27 @@
             </div>
         </main>
 
+        <!-- Invitation Code Modal -->
+        <div id="activation-modal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <h3>需要激活码</h3>
+                <p>本测试为付费测试，请输入您的邀请码以开始测试。</p>
+                <div class="input-group">
+                    <input type="text" id="invitation-code-input" placeholder="输入邀请码" maxlength="20">
+                    <button id="activate-btn" class="btn-primary">激活并开始</button>
+                    <p id="activation-error" class="error-msg"></p>
+                </div>
+                <div class="activation-help">
+                    <a href="https://2.taobao.com" target="_blank">前往闲鱼获取邀请码 &rarr;</a>
+                </div>
+            </div>
+        </div>
+
         <footer>
             <p>&copy; 2024 MBTI Explorer. Designed for Discovery.</p>
         </footer>
     </div>
     <script src="main.js"></script>
 </body>
+
 </html>

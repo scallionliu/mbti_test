@@ -193,7 +193,35 @@ const progressFill = document.getElementById('progress-fill');
 const questionNumberText = document.getElementById('question-number');
 const progressPercentageText = document.getElementById('progress-percentage');
 
+// TODO: Replace with your actual Server Public IP after deployment
+// Example: const API_BASE_URL = 'http://123.45.67.89:3000/api';
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:3000/api'
+    : 'http://PLEASE_REPLACE_WITH_YOUR_SERVER_IP:3000/api';
+
+const activationModal = document.getElementById('activation-modal');
+const activationInput = document.getElementById('invitation-code-input');
+const activateBtn = document.getElementById('activate-btn');
+const activationError = document.getElementById('activation-error');
+
+// Event Listeners for Activation
+activateBtn.addEventListener('click', verifyCode);
+activationInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') verifyCode();
+});
+
+// Close modal if clicking outside
+activationModal.addEventListener('click', (e) => {
+    if (e.target === activationModal) {
+        activationModal.classList.add('hidden');
+    }
+});
+
 function initQuiz() {
+    if (!localStorage.getItem('device_activated')) {
+        showActivationModal();
+        return;
+    }
     selectedQuestions = [];
     for (let i = 0; i < 4; i++) {
         const pool = QUESTIONS.slice(i * 10, (i + 1) * 10);
@@ -231,22 +259,43 @@ function finishQuiz() {
     setTimeout(() => {
         const type = (scores.E >= scores.I ? "E" : "I") + (scores.S >= scores.N ? "S" : "N") + (scores.T >= scores.F ? "T" : "F") + (scores.J >= scores.P ? "J" : "P");
         renderResult(type);
-    }, 2500);
+    }, 1250);
 }
 
 function renderResult(type) {
     const detail = TYPE_DETAILS[type];
-    const ePercent = Math.round((scores.E / (scores.E + scores.I)) * 100) || 50;
-    const sPercent = Math.round((scores.S / (scores.S + scores.N)) * 100) || 50;
-    const tPercent = Math.round((scores.T / (scores.T + scores.F)) * 100) || 50;
-    const jPercent = Math.round((scores.J / (scores.J + scores.P)) * 100) || 50;
+
+    // Calculate percentages for both sides
+    const getPercentage = (val1, val2) => {
+        const total = val1 + val2;
+        if (total === 0) return { p1: 50, p2: 50 };
+        const p1 = Math.round((val1 / total) * 100);
+        return { p1: p1, p2: 100 - p1 };
+    };
+
+    const ei = getPercentage(scores.E, scores.I);
+    const sn = getPercentage(scores.S, scores.N);
+    const tf = getPercentage(scores.T, scores.F);
+    const jp = getPercentage(scores.J, scores.P);
 
     resultView.innerHTML = `
         <div class="result-card">
-            <div class="type-code">${type}</div>
-            <h2 class="type-title">${detail.title}</h2>
-            <p class="type-desc">${detail.desc}</p>
+            <div class="result-header">
+                <div class="type-code">${type}</div>
+                <h2 class="type-title">${detail.title}</h2>
+                <p class="type-desc">${detail.desc}</p>
+            </div>
             
+            <div class="traits-container">
+                <h3 class="section-title">📊 性格维度分布</h3>
+                <div class="traits-grid">
+                    ${renderTraitBar('外向 (E)', '内向 (I)', ei.p1, ei.p2, 'ei')}
+                    ${renderTraitBar('实感 (S)', '直觉 (N)', sn.p1, sn.p2, 'sn')}
+                    ${renderTraitBar('思考 (T)', '情感 (F)', tf.p1, tf.p2, 'tf')}
+                    ${renderTraitBar('判断 (J)', '知觉 (P)', jp.p1, jp.p2, 'jp')}
+                </div>
+            </div>
+
             <div class="analysis-sections">
                 <div class="analysis-item">
                     <h4>💼 工作与职业</h4>
@@ -271,16 +320,26 @@ function renderResult(type) {
                 <p class="match-text">${detail.match}</p>
             </div>
 
-            <div class="traits-grid">
-                <div class="trait-item"><span class="trait-value">${ePercent}%</span><span class="trait-label">外向 (E) vs 内向 (I)</span></div>
-                <div class="trait-item"><span class="trait-value">${sPercent}%</span><span class="trait-label">实感 (S) vs 直觉 (N)</span></div>
-                <div class="trait-item"><span class="trait-value">${tPercent}%</span><span class="trait-label">思考 (T) vs 情感 (F)</span></div>
-                <div class="trait-item"><span class="trait-value">${jPercent}%</span><span class="trait-label">判断 (J) vs 知觉 (P)</span></div>
-            </div>
             <button class="btn-primary" onclick="window.location.reload()">重新测试</button>
         </div>
     `;
     showView('result');
+}
+
+function renderTraitBar(label1, label2, p1, p2, colorClass) {
+    return `
+        <div class="trait-bar-container ${colorClass}">
+            <div class="trait-labels">
+                <span>${label1}</span>
+                <span>${label2}</span>
+            </div>
+            <div class="bar-outer">
+                <div class="bar-fill" style="width: ${p1}%"></div>
+                <div class="bar-percentage-label p1">${p1}%</div>
+                <div class="bar-percentage-label p2">${p2}%</div>
+            </div>
+        </div>
+    `;
 }
 
 function showView(viewId) {
@@ -290,3 +349,61 @@ function showView(viewId) {
 
 document.getElementById('start-btn').addEventListener('click', initQuiz);
 window.handleSelect = handleSelect;
+
+// Activation Logic
+function showActivationModal() {
+    activationModal.classList.remove('hidden');
+    activationInput.focus();
+}
+
+async function verifyCode() {
+    const code = activationInput.value.trim();
+    if (!code) {
+        showError('请输入邀请码');
+        return;
+    }
+
+    setLoading(true);
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/validate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ code })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            localStorage.setItem('device_activated', 'true');
+            activationModal.classList.add('hidden');
+            alert('激活成功！开始测试...');
+            initQuiz();
+        } else {
+            showError(data.error || '激活码无效或已使用');
+        }
+    } catch (err) {
+        console.error('Activation Error:', err);
+        showError('网络错误，请检查您的网络连接或稍后再试');
+    } finally {
+        setLoading(false);
+    }
+}
+
+function showError(msg) {
+    activationError.innerText = msg;
+    activationInput.classList.add('shake');
+    setTimeout(() => activationInput.classList.remove('shake'), 500);
+}
+
+function setLoading(isLoading) {
+    if (isLoading) {
+        activateBtn.innerText = '验证中...';
+        activateBtn.disabled = true;
+    } else {
+        activateBtn.innerText = '激活并开始';
+        activateBtn.disabled = false;
+    }
+}
