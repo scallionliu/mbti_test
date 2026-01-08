@@ -197,7 +197,7 @@ const progressPercentageText = document.getElementById('progress-percentage');
 // Example: const API_BASE_URL = 'http://123.45.67.89:3000/api';
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:3000/api'
-    : 'http://PLEASE_REPLACE_WITH_YOUR_SERVER_IP:3000/api';
+    : 'http://42.192.65.17:3000/api';
 
 const activationModal = document.getElementById('activation-modal');
 const activationInput = document.getElementById('invitation-code-input');
