@@ -15,7 +15,7 @@
   ],
   "scripts": {
     "start": "cd server && npm start",
-    "build": "mkdir -p dist && cp index.html style.css main.js dist/"
+    "build": "mkdir -p dist && cp index.html admin.html style.css main.js dist/"
   },
   "author": "",
   "license": "MIT"
